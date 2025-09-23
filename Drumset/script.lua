@@ -199,12 +199,44 @@ function playSound(keyID,notePos,noteVolume)
     sounds:playSound('sounds.'..keyID,notePos,noteVolume)
   end
 
+function getDrumIDs()
+	local drumIDs = {}
+	for id, _ in pairs(drums) do
+		table.insert(drumIDs, id)
+	end
+	return drumIDs
+end
+
+function getDrumPositions()
+	local drumPositions = {}
+	for _, drum in pairs(drums) do
+		table.insert(drumPositions, drum.pos:copy())
+	end
+	return drumPositions
+end
+
+function getNearestDrumID(testPosition)
+    local nearestDrumID
+    local nearestDrumDistSquared
+    for id, drum in pairs(drums) do
+        local newDistSquared = drum.pos:copy():sub(testPosition):lengthSquared()
+        if not nearestDrumID or newDistSquared < nearestDrumDistSquared then 
+            nearestDrumID = id
+            nearestDrumDistSquared = newDistSquared
+        end
+    end
+    return nearestDrumID, (nearestDrumID and drums[nearestDrumID].pos:copy() or nil)
+end
+
 -- stores important functions so that other avatars can access them through avatarVars() in the world API
 avatar:store("playNote", playNote)
 avatar:store("playSound",playSound)
 avatar:store("validPos", function(pianoID) return drums[pianoID] ~= nil end)
 avatar:store("getPlayingKeys",
     function(drumID) return drums[drumID] ~= nil and drums[drumID].playingKeys or nil end)
+avatar:store("getDrumIDs", getDrumIDs)
+avatar:store("getDrumPositions", getDrumPositions)
+avatar:store("getNearestDrumID", getNearestDrumID)
 
 -- the tick function >~>
 function events.world_tick()
